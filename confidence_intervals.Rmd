@@ -7,49 +7,62 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.7
+      jupytext_version: 1.16.6
   kernelspec:
     display_name: R
     language: R
     name: ir
 ---
 
+# An R tutorial on confidence intervals
 
 
-Here is a *population* of values.
+Here is a *population* of values.  In fact, in our case, it is a complete collection of the birth weights for all children born in North Carolina in 2008.  See <https://github.com/odsti/datasets/tree/main/birth_weights> for more on the source of the data.
 
 ```{r}
-df <- read.csv('data/birth_weights.csv')
-birth_weights <- df[['BWEIGHT']]
-birth_weights
+# Birth weights for every baby born in North Carolina.
+df <- read.csv('data/nc_birth_weights.csv')
+bw_pop_vals = df[['birth_weight']]
+bw_pop_vals
 ```
 
 ```{r}
-hist(birth_weights)
+hist(bw_pop_vals)
 ```
 
-But - we don't know anything about this population yet.  All we have is a single random sample of 50 values.
+But - we are very rarely in the situation where we know the values for the entire population.   We are usually in the case where we have some random sample of values from this population.
+
+So, let's say we are in this typical situation, and we don't know anything about the underlying population yet.  All we have is a single random sample of 50 values, that someone has taken for us.
 
 ```{r}
-bw_sample <- sample(birth_weights, size=50)
-bw_sample
+# A random sample of birthweights that someone has taken for us.
+bw_sample_vals = read.csv('data/nc_birth_weights_sample.csv')[['birth_weight']]
+bw_sample_vals
 ```
 
 ```{r}
-hist(bw_sample)
+# This is the kind of random sample I would get by using the
+# `sample` function in R, like this:
+sample(bw_pop_vals, size=50)
+```
+
+Here's a histogram of our given sample:
+
+```{r}
+hist(bw_sample_vals)
 ```
 
 All we know is the sample.  We can make a guess at the mean of the population, by taking the mean of the sample:
 
 ```{r}
-sample_mean <- mean(bw_sample)
+sample_mean <- mean(bw_sample_vals)
 sample_mean
 ```
 
 But the sample mean is not exactly the same as the actual population mean.
 
 ```{r}
-pop_mean <- mean(birth_weights)
+pop_mean <- mean(bw_pop_vals)
 pop_mean
 ```
 
@@ -63,7 +76,7 @@ Notice it has a slightly different mean.
 
 ```{r}
 # Draw another random sample.  Look at the mean.
-another_sample <- sample(birth_weights, size=50)
+another_sample <- sample(bw_pop_vals, size=50)
 mean(another_sample)
 ```
 
@@ -73,7 +86,7 @@ Now we'll cheat even more, and we'll draw 10,000 samples from the population, wh
 # Draw 10,000 samples.  Take the mean of each sample, and record it.
 sample_means <- numeric(10000)
 for (i in 1:10000) {
-    this_sample <- sample(birth_weights, size=50)
+    this_sample <- sample(bw_pop_vals, size=50)
     sample_means[i] <- mean(this_sample)
 }
 # We now have 10,000 sample means.
@@ -95,14 +108,14 @@ mean(sample_means)
 ```
 
 ```{r}
-mean(birth_weights)
+mean(bw_pop_vals)
 ```
 
 We can also think of this sampling distribution, as the distribution of *errors*.   Each time we take a sample, and calculate the mean, we can ask how far the sample mean is from the population mean.  This difference, between the sample mean and population mean, is the *error* of sample mean.
 
 ```{r}
 # Draw another random sample.  Look at the mean.
-yet_another_sample <- sample(birth_weights, size=50)
+yet_another_sample <- sample(bw_pop_vals, size=50)
 yet_another_mean <- mean(yet_another_sample)
 yet_another_mean
 ```
@@ -125,7 +138,7 @@ Just while we're here, the standard deviation of this distribution is our old fr
 OK, now let's go back to the world that I started with, where I knew nothing of population, but I have a random sample from the population, and that sample has a particular mean (that we've seen):
 
 ```{r}
-mean(bw_sample)
+mean(bw_sample_vals)
 ```
 
 At the moment, I have difficult problem.   What can I say about the population mean, given the sample mean?  I guess the population mean will be somewhere near the sample mean - but how near?   Put another way, the population mean will be the sample mean, *plus or minus a bit*.   But how do I quantify this *plus or minus a bit*?
@@ -176,11 +189,11 @@ confidence_interval
 I would say this - given my sample mean, the population mean is likely (in the 95% sense) to be somewhere between these two values.
 
 
-Just so you can see I am not crazy, here is the confidence interval calculated in a slightly different way (using some mathematical assumptions).  It gives a very similar result.
+Just so you can see I am not crazy, here is the confidence interval calculated in a slightly different way (using some mathematical assumptions).  It gives a similar result.
 
 ```{r}
 # Calculate the confidence intervals using normal distribution assumptions.
-confint(lm(bw_sample ~ 1))
+confint(lm(bw_sample_vals ~ 1))
 ```
 
 OK - so you at once complain - you have a sample, but you do not have a helpful person who can give you the distribution of the sampling errors of the mean.
@@ -207,19 +220,19 @@ rep(c(1, 2, 3), 10)
 This was our original sample of 50 values.
 
 ```{r}
-bw_sample
+bw_sample_vals
 ```
 
 Here (again) is the histogram of that sample.
 
 ```{r}
-hist(bw_sample, breaks=10)
+hist(bw_sample_vals, breaks=10)
 ```
 
 Now we make something to stand in for the population, by repeating each value in the sample 1000 times.
 
 ```{r}
-fake_population <- rep(bw_sample, 1000)
+fake_population <- rep(bw_sample_vals, 1000)
 fake_population
 ```
 
@@ -276,5 +289,5 @@ meanfun <- function(data, i){ return (mean(data[i])) }
 
 ```{r}
 # Calculate the bootstrap confidence intervals.
-boot.ci(boot(bw_sample, meanfun, 10000), type = 'basic')
+boot.ci(boot(bw_sample_vals, meanfun, 10000), type = 'basic')
 ```
