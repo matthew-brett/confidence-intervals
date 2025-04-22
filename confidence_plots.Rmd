@@ -7,7 +7,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.6
+      jupytext_version: 1.16.7
   kernelspec:
     display_name: R
     language: R
@@ -23,6 +23,7 @@ on the source of the data.
 
 ```{r}
 library(dplyr)
+library(glue)
 library(ggplot2)
 library(cowplot)
 ```
@@ -55,44 +56,6 @@ n <- 50
 ```
 
 ```{r}
-n_samples <- 4
-row_2_start <- 2
-row_3_start <- row_2_start + n_samples
-layout_matrix <- rbind(c(1, numeric(n_samples - 1)),
-                       row_2_start:(row_2_start + n_samples - 1),
-                       row_3_start:(row_3_start + n_samples - 1))
-layout(layout_matrix)
-hist(bw_pop_vals)
-abline(v = pop_mean, col = "blue", lwd = 3, lty = 3)
-means <- numeric(n_samples)
-breaks <- seq(0, 6, 0.5)
-for (i in 1:n_samples) {
-    sample <- sample(bw_pop_vals, size=50)
-    sample_mean <- mean(sample)
-    hist(sample, breaks=breaks, ylim=c(0, 25))
-    abline(v = pop_mean, col = "blue", lwd = 3)
-    abline(v = sample_mean, col = "red", lwd = 3)
-    means[i] <- sample_mean
-}
-for (i in 1:n_samples) {
-    hist(means)
-}
-```
-
-```{r}
-
-iris1 <- ggplot(iris, aes(x = Species, y = Sepal.Length)) +
-  geom_boxplot() + theme_bw()
-
-iris2 <- ggplot(iris, aes(x = Sepal.Length, fill = Species)) +
-  geom_density(alpha = 0.7) + theme_bw() +
-  theme(legend.position = c(0.8, 0.8))
-
-plot_grid(iris1, iris2, labels = "AUTO")
-
-```
-
-```{r}
 tbw <- theme_set(theme_bw())
 breaks <- seq(0.2, 5.5, by=0.2)
 
@@ -105,7 +68,7 @@ plot_bw <- function(df) {
         mean_col <- 'red'
     }
     mean_val <- mean(df[['birth_weight']])
-    label <- paste('Mean:', sprintf('%.2f', mean_val))
+    label <- glue('Mean: {round(mean_val, 2)}')
     p <- (
         ggplot(df, aes(birth_weight))
         + geom_histogram(fill = fill_col, breaks = breaks)
@@ -115,51 +78,198 @@ plot_bw <- function(df) {
         + labs(x = "Birth weight", colour="")  # Reset colour for later.
         + scale_colour_manual(values=mean_col)
         + theme(legend.position=c(0.25, 0.8),
-                legend.text = element_text(size=20),
+                legend.text = element_text(size=15),
                 aspect.ratio=0.7)
     )
 }
 
-p <- plot_bw(bw_pop) + labs(
+pop_p <- plot_bw(bw_pop) + labs(
     title = 'All NC birth weights',
     subtitle = '(Population)')
-p
+pop_p
 ```
 
 ```{r}
-ggsave('population.png', p)
+ggsave('population.png', pop_p)
 ```
 
 Note that one can get axis limits like this:
 
 ```{r}
 # https://stackoverflow.com/a/62819446
-layer_scales(p)$y$get_limits()
+layer_scales(pop_p)$y$get_limits()
 ```
 
 
 ```{r}
-p <- plot_bw(bw_sample) + labs(
-    title = 'Our sample')
-ggsave('our_sample.png', p)
-p
+samp_ylims = ylim(0, 15)
+p0 <- plot_bw(bw_sample) + labs(
+    title = 'Our sample') + samp_ylims
+ggsave('our_sample.png', p0)
+p0
 ```
 
 ```{r}
 set.seed(1939)
 n <- 50
-sample2 <- sample_n(bw_pop, n)
-p <- plot_bw(sample2) + labs(
-    title = 'A second sample')
-ggsave('sample2.png', p)
-sample3 <- sample_n(bw_pop, n)
-p <- plot_bw(sample3) + labs(
-    title = 'A third sample')
-ggsave('sample3.png', p)
-sample4 <- sample_n(bw_pop, n)
-p <- plot_bw(sample4) + labs(
-    title = 'A fourth sample')
-ggsave('sample4.png', p)
+n_samples <- 5
+samples <- list()
+for (i in 2:(n_samples + 1)) {
+    sample <- sample_n(bw_pop, n)
+    name <- sprintf('%d', i)
+    p <- (plot_bw(sample)
+          + labs(title = glue('Sample {name}'))
+          + samp_ylims)
+    ggsave(glue('sample{name}.png'), p)
+    samples[[name]] = list(sample=sample, plot=p, mean=mean(sample[['birth_weight']]))
+}
 ```
 
-Consider <https://wilkelab.org/cowplot/articles/shared_legends.html>
+```{r}
+plots = list()
+for (name in names(samples)) {
+    v <- samples[[name]]
+    plots[[name]] <- (v[['plot']]
+                    + theme_half_open(12)
+                    + theme(legend.position='none')
+                    + labs(title=NULL)
+                    + xlab(glue('Mean: {round(v[["mean"]], 2)}'))
+                    )
+}
+plots[[1]] <- plots[[1]] + ylab('Counts')
+```
+
+From: <https://wilkelab.org/cowplot/articles/shared_legends.html>
+
+```{r}
+p_samps <- plot_grid(
+    plotlist = plots,
+    align = 'vh',
+    labels = sapply(1:n_samples, function(i) glue('S{i + 1}')),
+    nrow = 1
+)
+p_samps
+```
+
+```{r}
+# https://rdrr.io/cran/cowplot/man/save_plot.html
+save_plot('five_samples.png', p_samps, base_asp=4)
+```
+
+```{r}
+# Estimated SD of sampling distribution of mean.
+sem <- sd(bw_pop_vals) / sqrt(n)
+sem
+```
+
+```{r}
+samp_lims <- pop_mean + sem * c(-4, 4)
+samp_lims
+```
+
+```{r}
+samp_dists = list()
+means = data.frame(sample_mean=numeric())
+samp_breaks = seq(2.9, 3.6, 0.1)
+mean_col = 'green'
+for (name in names(samples)) {
+    means[nrow(means) + 1,] = samples[[name]][['mean']]
+    p <- (
+        ggplot(means, aes(sample_mean))
+        + geom_histogram(breaks = samp_breaks)
+        + xlab('Mean birth weight')
+        + ylim(0, 5)
+        + theme_half_open(12)
+        + labs(title=NULL)
+    )
+    samp_dists[[name]] <- p
+}
+```
+
+```{r}
+p_mean_dist <- plot_grid(
+    plotlist = samp_dists,
+    align = 'vh',
+    labels = sapply(1:n_samples, function(i) glue('H{i + 1}')),
+    nrow = 1
+)
+p_mean_dist
+```
+
+```{r}
+p_whole <- plot_grid(
+    pop_p + labs(title=NULL) + theme(legend.position='none'),
+    p_samps, p_mean_dist, ncol = 1)
+p_whole
+```
+
+```{r}
+save_plot('whole_grid.png', p_whole, base_asp=4)
+```
+
+```{r}
+n_iters <- 100000
+samp_dist_vals <- numeric(n_iters)
+for (i in 1:n_iters) {
+    sample <- sample(bw_pop_vals, n)
+    samp_dist_vals[i] <- mean(sample)
+}
+samp_dist <- data.frame(sample_mean=samp_dist_vals)
+```
+
+```{r}
+full_samp_breaks <- seq(2.9, 3.6, 0.005)
+m_s_d <- mean(samp_dist_vals)
+x_label <- glue('Sample means: mean {round(m_s_d, 2)}')
+p_s_dist <- (
+    ggplot(samp_dist, aes(sample_mean))
+    + geom_histogram(breaks = full_samp_breaks)
+    + geom_vline(aes(xintercept=m_s_d),
+                 linewidth=1,
+                 linetype='dashed')
+    + labs(x = x_label)
+    + theme(legend.position='none')
+    + labs(title='Sampling distribution of mean')
+)
+p_s_dist
+```
+
+```{r}
+ggsave('sampling_distribution.png', p_s_dist)
+```
+
+```{r}
+lo_hi <- quantile(samp_dist_vals, c(0.025, 0.975))
+lo_hi
+```
+
+```{r}
+lo <- lo_hi[1]
+hi <- lo_hi[2]
+lo_vals <- subset(samp_dist, sample_mean <= lo)
+lo_bins <- subset(full_samp_breaks, full_samp_breaks <= lo)
+hi_vals <- subset(samp_dist, sample_mean >= hi)
+hi_bins <- subset(full_samp_breaks, full_samp_breaks >= hi)
+
+plot_samp_dist <- function(offset = 0) {
+    return (ggplot(samp_dist + offset, aes(sample_mean))
+            + geom_histogram(breaks = full_samp_breaks + offset)
+            + geom_histogram(data=lo_vals + offset, breaks=lo_bins + offset, fill="blue")
+            + geom_histogram(data=hi_vals + offset, breaks=hi_bins + offset, fill="blue")
+            + geom_vline(aes(xintercept=lo + offset, colour='2.5%'),
+                         linewidth=1,
+                         linetype='dashed')
+            + geom_vline(aes(xintercept=hi + offset, colour='97.5%'),
+                         linewidth=1,
+                         linetype='dashed')
+            + labs(colour="%ile boundaries")
+            + theme(legend.position=c(0.15, 0.8))
+       )
+}
+
+plot_samp_dist(offset=3)
+```
+
+```{r}
+
+```
