@@ -90,7 +90,7 @@ plot_grid(iris1, iris2, labels = "AUTO")
 
 ```{r}
 tbw <- theme_set(theme_bw())
-breaks <- seq(0, 6, by=0.2)
+breaks <- seq(0.2, 5.5, by=0.2)
 label <- paste('Mean:', sprintf('%.2f', pop_mean))
 p <- (
     ggplot(bw_pop, aes(birth_weight))
@@ -109,6 +109,14 @@ p <- (
 ); p
 ```
 
+Note that one can get axis limits like this:
+
+```{r}
+# https://stackoverflow.com/a/62819446
+layer_scales(p)$y$get_limits()
+```
+
+
 ```{r}
 label <- paste('Sample mean:', sprintf('%.2f', sample_mean))
 p <- (
@@ -125,3 +133,5 @@ p <- (
             legend.text = element_text(size=20))
 ); p
 ```
+
+Consider <https://wilkelab.org/cowplot/articles/shared_legends.html>
