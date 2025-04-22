@@ -1,0 +1,127 @@
+---
+jupyter:
+  jupytext:
+    notebook_metadata_filter: all,-language_info
+    split_at_heading: true
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.16.6
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# An R tutorial on confidence intervals with plots
+
+Here is a *population* of values.  In fact, in our case, it is a complete
+collection of the birth weights for all children born in North Carolina in
+2008.  See <https://github.com/odsti/datasets/tree/main/birth_weights> for more
+on the source of the data.
+
+```{r}
+# Birth weights for every baby born in North Carolina.
+bw_pop <- read.csv('data/nc_birth_weights.csv')
+bw_pop_vals <- bw_pop[['birth_weight']]
+pop_mean <- mean(bw_pop_vals)
+```
+
+But - we are very rarely in the situation where we know the values for the
+entire population.   We are usually in the case where we have some random
+sample of values from this population.
+
+So, let's say we are in this typical situation, and we don't know anything
+about the underlying population yet.  All we have is a single random sample of
+50 values, that someone has taken for us.
+
+```{r}
+# A random sample of birthweights that someone has taken for us.
+bw_sample <- read.csv('data/nc_birth_weights_sample.csv')
+bw_sample_vals <- bw_sample[['birth_weight']]
+sample_mean <- mean(bw_sample_vals)
+```
+
+```{r}
+# The size of our sample(s).
+n <- 50
+```
+
+```{r}
+n_samples <- 4
+row_2_start <- 2
+row_3_start <- row_2_start + n_samples
+layout_matrix <- rbind(c(1, numeric(n_samples - 1)),
+                       row_2_start:(row_2_start + n_samples - 1),
+                       row_3_start:(row_3_start + n_samples - 1))
+layout(layout_matrix)
+hist(bw_pop_vals)
+abline(v = pop_mean, col = "blue", lwd = 3, lty = 3)
+means <- numeric(n_samples)
+breaks <- seq(0, 6, 0.5)
+for (i in 1:n_samples) {
+    sample <- sample(bw_pop_vals, size=50)
+    sample_mean <- mean(sample)
+    hist(sample, breaks=breaks, ylim=c(0, 25))
+    abline(v = pop_mean, col = "blue", lwd = 3)
+    abline(v = sample_mean, col = "red", lwd = 3)
+    means[i] <- sample_mean
+}
+for (i in 1:n_samples) {
+    hist(means)
+}
+```
+
+```{r}
+library(ggplot2)
+library(cowplot)
+
+iris1 <- ggplot(iris, aes(x = Species, y = Sepal.Length)) +
+  geom_boxplot() + theme_bw()
+
+iris2 <- ggplot(iris, aes(x = Sepal.Length, fill = Species)) +
+  geom_density(alpha = 0.7) + theme_bw() +
+  theme(legend.position = c(0.8, 0.8))
+
+plot_grid(iris1, iris2, labels = "AUTO")
+
+```
+
+```{r}
+tbw <- theme_set(theme_bw())
+breaks <- seq(0, 6, by=0.2)
+label <- paste('Mean:', sprintf('%.2f', pop_mean))
+p <- (
+    ggplot(bw_pop, aes(birth_weight))
+    + geom_histogram(fill = "light grey", breaks = breaks)
+    + labs(x = "Birth weight",
+           title = 'All NC birth weights',
+           subtitle = '(Population)')
+    + geom_vline(aes(xintercept=pop_mean,
+                     colour=label),
+                 linewidth=1,
+                 linetype='dashed')
+    + labs(colour="")
+    + scale_colour_manual(values="blue")
+    + theme(legend.position=c(0.2, 0.8),
+            legend.text = element_text(size=20))
+); p
+```
+
+```{r}
+label <- paste('Sample mean:', sprintf('%.2f', sample_mean))
+p <- (
+    ggplot(bw_sample, aes(birth_weight))
+    + geom_histogram(binwidth=0.2, fill = "dark grey", breaks=breaks)
+    + labs(x = "Birth weight",
+           title = 'Sample birth weights')
+    + geom_vline(aes(xintercept=sample_mean, colour=label),
+                 linewidth=1,
+                 linetype='dashed')
+    + labs(colour="")
+    + scale_colour_manual(values="red")
+    + theme(legend.position=c(0.25, 0.8),
+            legend.text = element_text(size=20))
+); p
+```
