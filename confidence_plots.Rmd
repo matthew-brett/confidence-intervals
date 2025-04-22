@@ -22,6 +22,12 @@ collection of the birth weights for all children born in North Carolina in
 on the source of the data.
 
 ```{r}
+library(dplyr)
+library(ggplot2)
+library(cowplot)
+```
+
+```{r}
 # Birth weights for every baby born in North Carolina.
 bw_pop <- read.csv('data/nc_birth_weights.csv')
 bw_pop_vals <- bw_pop[['birth_weight']]
@@ -74,8 +80,6 @@ for (i in 1:n_samples) {
 ```
 
 ```{r}
-library(ggplot2)
-library(cowplot)
 
 iris1 <- ggplot(iris, aes(x = Species, y = Sepal.Length)) +
   geom_boxplot() + theme_bw()
@@ -91,22 +95,39 @@ plot_grid(iris1, iris2, labels = "AUTO")
 ```{r}
 tbw <- theme_set(theme_bw())
 breaks <- seq(0.2, 5.5, by=0.2)
-label <- paste('Mean:', sprintf('%.2f', pop_mean))
-p <- (
-    ggplot(bw_pop, aes(birth_weight))
-    + geom_histogram(fill = "light grey", breaks = breaks)
-    + labs(x = "Birth weight",
-           title = 'All NC birth weights',
-           subtitle = '(Population)')
-    + geom_vline(aes(xintercept=pop_mean,
-                     colour=label),
-                 linewidth=1,
-                 linetype='dashed')
-    + labs(colour="")
-    + scale_colour_manual(values="blue")
-    + theme(legend.position=c(0.2, 0.8),
-            legend.text = element_text(size=20))
-); p
+
+plot_bw <- function(df) {
+    if (nrow(df) > 1000) {  # Population
+        fill_col <- 'light grey'
+        mean_col <- 'blue'
+    } else {  # Sample
+        fill_col <- 'dark grey'
+        mean_col <- 'red'
+    }
+    mean_val <- mean(df[['birth_weight']])
+    label <- paste('Mean:', sprintf('%.2f', mean_val))
+    p <- (
+        ggplot(df, aes(birth_weight))
+        + geom_histogram(fill = fill_col, breaks = breaks)
+        + geom_vline(aes(xintercept=mean_val, colour=label),
+                     linewidth=1,
+                     linetype='dashed')
+        + labs(x = "Birth weight", colour="")  # Reset colour for later.
+        + scale_colour_manual(values=mean_col)
+        + theme(legend.position=c(0.25, 0.8),
+                legend.text = element_text(size=20),
+                aspect.ratio=0.7)
+    )
+}
+
+p <- plot_bw(bw_pop) + labs(
+    title = 'All NC birth weights',
+    subtitle = '(Population)')
+p
+```
+
+```{r}
+ggsave('population.png', p)
 ```
 
 Note that one can get axis limits like this:
@@ -118,20 +139,27 @@ layer_scales(p)$y$get_limits()
 
 
 ```{r}
-label <- paste('Sample mean:', sprintf('%.2f', sample_mean))
-p <- (
-    ggplot(bw_sample, aes(birth_weight))
-    + geom_histogram(binwidth=0.2, fill = "dark grey", breaks=breaks)
-    + labs(x = "Birth weight",
-           title = 'Sample birth weights')
-    + geom_vline(aes(xintercept=sample_mean, colour=label),
-                 linewidth=1,
-                 linetype='dashed')
-    + labs(colour="")
-    + scale_colour_manual(values="red")
-    + theme(legend.position=c(0.25, 0.8),
-            legend.text = element_text(size=20))
-); p
+p <- plot_bw(bw_sample) + labs(
+    title = 'Our sample')
+ggsave('our_sample.png', p)
+p
+```
+
+```{r}
+set.seed(1939)
+n <- 50
+sample2 <- sample_n(bw_pop, n)
+p <- plot_bw(sample2) + labs(
+    title = 'A second sample')
+ggsave('sample2.png', p)
+sample3 <- sample_n(bw_pop, n)
+p <- plot_bw(sample3) + labs(
+    title = 'A third sample')
+ggsave('sample3.png', p)
+sample4 <- sample_n(bw_pop, n)
+p <- plot_bw(sample4) + labs(
+    title = 'A fourth sample')
+ggsave('sample4.png', p)
 ```
 
 Consider <https://wilkelab.org/cowplot/articles/shared_legends.html>
