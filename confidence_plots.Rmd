@@ -208,7 +208,7 @@ save_plot('whole_grid.png', p_whole, base_asp=4)
 ```
 
 ```{r}
-n_iters <- 100000
+n_iters <- 10000
 samp_dist_vals <- numeric(n_iters)
 for (i in 1:n_iters) {
     sample <- sample(bw_pop_vals, n)
@@ -218,7 +218,8 @@ samp_dist <- data.frame(sample_mean=samp_dist_vals)
 ```
 
 ```{r}
-full_samp_breaks <- seq(2.9, 3.6, 0.005)
+samp_bin_width <- 0.01
+full_samp_breaks <- seq(2.9, 3.6, samp_bin_width)
 m_s_d <- mean(samp_dist_vals)
 x_label <- glue('Sample means: mean {round(m_s_d, 2)}')
 p_s_dist <- (
@@ -267,9 +268,33 @@ plot_samp_dist <- function(offset = 0) {
        )
 }
 
-plot_samp_dist(offset=3)
+plot_samp_dist(offset=0)
 ```
 
 ```{r}
+d <- density(samp_dist_vals, bw=0.02)
+d_x <- d$x
+d_y <- d$y * length(samp_dist_vals) * samp_bin_width
+```
 
+```{r}
+plot(d_x, d_y)
+```
+
+```{r}
+p <- (ggplot(samp_dist, aes(sample_mean, fill='red'))
+ + geom_histogram(breaks = full_samp_breaks)
+ + geom_density(aes(y = after_stat(count * samp_bin_width)),
+                bw = 0.02, alpha = 0.3))
+p
+```
+
+```{r}
+ggp_build <- ggplot_build(p)
+sum(ggp_build$data[[1]]$y)
+```
+
+```{r}
+kde_data <- ggplot_build(p)$data[[2]]
+plot(kde_data$x, kde_data$y)
 ```
