@@ -277,7 +277,7 @@ plot_ssamp_dist(kde_df, 6)
 ```
 
 ```{r}
-kde_cdf <- cumsum(d$y / sum(d$y))
+kde_cdf <- cumsum(kde$y / sum(kde$y))
 le_025 <- kde_cdf <= 0.025
 ge_975 <- kde_cdf >= 0.975
 lower_tail <- subset(kde_df, le_025)
@@ -312,7 +312,7 @@ c(upper_diff, lower_diff)
 
 ```{r}
 e <- 0.01
-(p_tails
+(plot_mdist_tails(kde_df)
  + geom_segment(aes(x = lo_025_th + e, y = 30,
                     xend = m_samp_dist - e, yend = 30),
                 arrow = arrow(length = unit(0.5, "cm")))
@@ -327,10 +327,10 @@ library(animation)
 
 offsets <- sin(seq(0, 2 * pi, 0.05))
 
-min_x <- min(kde$x) - 1
-max_x <- max(kde$x) + 1
+min_x <- min(kde$x) - 0.7
+max_x <- max(kde$x) + 0.7
 
-vid_len <- 10  # Seconds.
+vid_len <- 6  # Seconds.
 fps <- length(offsets) / vid_len
 
 saveVideo(
@@ -345,4 +345,8 @@ saveVideo(
     },
     video.name = "moving_dist.mp4",
 )
+```
+
+```{r}
+
 ```
