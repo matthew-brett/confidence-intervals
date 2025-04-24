@@ -5,7 +5,7 @@
 # 2008.  See <https://github.com/odsti/datasets/tree/main/birth_weights> for more
 # on the source of the data.
 
-# You will also need 'data.table' and 'animate'.
+# You will also need 'data.table' and 'animation'.
 library(dplyr)
 library(glue)
 library(ggplot2)
