@@ -43,11 +43,16 @@ jobs:
 
       - name: Render Quarto Project
         shell: bash
-        run: quarto render slides --output-dir _site
+        run: quarto render slides --output-dir ../_site
 
-      - name: GitHub Pages action
-        if: ${{ github.ref == 'refs/heads/main' }}
-        uses: peaceiris/actions-gh-pages@v4
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          branch: gh-pages
