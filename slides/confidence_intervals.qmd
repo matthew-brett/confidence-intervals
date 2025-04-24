@@ -134,14 +134,17 @@ p
 
 ## Estimating the sampling distribution
 
-It turns out we can get a decent estimate of the sampling distribution, from the distribution of the sample itself (ask me how!).
+It turns out we can get a decent estimate of the sampling distribution, from
+the distribution of the sample itself (using, for example, the *bootstrap*
+method).
 
 ```{r}
 #| tags: [remove_input]
 plot_bw(bw_sample) + labs(title = 'Our sample') + samp_ylims
 ```
 
-However, this estimate does not tell us more about the *population mean*, only the size and shape of the sampling distribution.
+However, this estimate does not tell us more about the *population mean*, only
+the size and shape of the sampling distribution.
 
 ## Sampling distribution estimate
 
@@ -155,6 +158,9 @@ rm_x_ticks <- theme(axis.title.x=element_blank(),
       + rm_x_ticks
       )
 ```
+
+(I've removed the labels on the x-axis to show we do not know exactly where to
+place this distribution on the x-axis).
 
 ## {background-video="moving_dist.mp4" background-video-loop="true" background-size="contain"}
 
