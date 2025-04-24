@@ -1,4 +1,8 @@
 ---
+title: "The little sample that could"
+author: Matthew Brett
+date: 24 April 2025
+format: revealjs
 jupyter:
   jupytext:
     notebook_metadata_filter: all,-language_info
@@ -7,14 +11,14 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.6
+      jupytext_version: 1.16.7
   kernelspec:
     display_name: R
     language: R
     name: ir
 ---
 
-# An R tutorial on confidence intervals with plots
+## Introduction
 
 Here is a *population* of values.  In fact, in our case, it is a complete
 collection of the birth weights for all children born in North Carolina in
