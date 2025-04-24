@@ -93,10 +93,6 @@ pop_p <- plot_bw(bw_pop) + labs(
 pop_p
 ```
 
-```{r}
-ggsave('population.png', pop_p)
-```
-
 Note that one can get axis limits like this:
 
 ```{r}
@@ -109,7 +105,6 @@ layer_scales(pop_p)$y$get_limits()
 samp_ylims = ylim(0, 15)
 p0 <- plot_bw(bw_sample) + labs(
     title = 'Our sample') + samp_ylims
-ggsave('our_sample.png', p0)
 p0
 ```
 
@@ -124,7 +119,6 @@ for (i in 2:(n_samples + 1)) {
     p <- (plot_bw(sample)
           + labs(title = glue('Sample {name}'))
           + samp_ylims)
-    ggsave(glue('sample{name}.png'), p)
     samples[[name]] = list(sample=sample, plot=p, mean=mean(sample[['birth_weight']]))
 }
 ```
@@ -153,11 +147,6 @@ p_samps <- plot_grid(
     nrow = 1
 )
 p_samps
-```
-
-```{r}
-# https://rdrr.io/cran/cowplot/man/save_plot.html
-save_plot('five_samples.png', p_samps, base_asp=4)
 ```
 
 ```{r}
@@ -208,10 +197,6 @@ p_whole
 ```
 
 ```{r}
-save_plot('whole_grid.png', p_whole, base_asp=4)
-```
-
-```{r}
 n_iters <- 10000
 samp_dist_vals <- numeric(n_iters)
 for (i in 1:n_iters) {
@@ -238,10 +223,6 @@ p_s_dist <- (
     + labs(title='Sampling distribution of mean')
 )
 p_s_dist
-```
-
-```{r}
-ggsave('sampling_distribution.png', p_s_dist)
 ```
 
 ```{r}
@@ -316,41 +297,46 @@ c(upper_diff, lower_diff)
 
 ```{r}
 e <- 0.01
+mid_upper <- m_samp_dist - upper_diff / 2
+mid_lower <- m_samp_dist - lower_diff / 2
 (plot_mdist_tails(kde_df)
  + geom_segment(aes(x = lo_025_th + e, y = 30,
                     xend = m_samp_dist - e, yend = 30),
                 arrow = arrow(length = unit(0.5, "cm")))
+ + annotate("text", x = mid_upper, y = 50, label = glue('{round(upper_diff, 2)}'))
  + geom_segment(aes(x = hi_975_th - e, y = 30,
                     xend = m_samp_dist + e, yend = 30),
                 arrow = arrow(length = unit(0.5, "cm")))
+ + annotate("text", x = mid_lower, y = 50, label = glue('{round(lower_diff, 2)}'))
  )
 ```
 
 ```{r}
 library(animation)
 
-offsets <- sin(seq(0, 2 * pi, 0.05))
+build_moving <- function(vid_len = 6, video_name = 'moving_dist.mp4') {
+    offsets <- sin(seq(0, 2 * pi, 0.05))
 
-min_x <- min(kde$x) - 0.7
-max_x <- max(kde$x) + 0.7
+    min_x <- min(kde$x) - 0.7
+    max_x <- max(kde$x) + 0.7
 
-vid_len <- 6  # Seconds.
-fps <- length(offsets) / vid_len
+    # vid_len in seconds.
+    fps <- length(offsets) / vid_len
 
-saveVideo(
-    {
-        ani.options(interval = 1 / fps)
-        for (i in 1:length(offsets)) {
-            offset <- offsets[i]
-            p <- plot_ssamp_dist(kde_df, offset)
-            p <- p + xlim(min_x, max_x)
-            plot(p)
-        }
-    },
-    video.name = "moving_dist.mp4",
-)
-```
+    saveVideo(
+        {
+            ani.options(interval = 1 / fps)
+            for (i in 1:length(offsets)) {
+                offset <- offsets[i]
+                p <- plot_ssamp_dist(kde_df, offset)
+                p <- p + xlim(min_x, max_x)
+                plot(p)
+            }
+        },
+        video.name = video_name
+    )
+}
 
-```{r}
-
+# Write animation with:
+# build_moving()
 ```

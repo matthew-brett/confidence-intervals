@@ -5,131 +5,77 @@ date: 24 April 2025
 format: revealjs
 ---
 
-## Introduction
+## A confounded statistician
 
-Here is a *population* of values.  In fact, in our case, it is a complete
-collection of the birth weights for all children born in North Carolina in
-2008.  See <https://github.com/odsti/datasets/tree/main/birth_weights> for more
-on the source of the data.
+It is 2009, and I'm a statistician working in North Carolina.
+
+I want to estimate the average birth weight for babies born in the state.
+
+The state has [records of the birth weights for all babies born in
+2008](https://github.com/odsti/datasets/tree/main/birth_weights), but for
+privacy reasons, it will not release them.
+
+They have given me a random sample of 50 birth weights.
+
+## The lonely sample
 
 ```{r}
 #| tags: [remove_input]
-# You will also need 'data.table' and 'animate'.
-library(dplyr)
-library(glue)
-library(ggplot2)
-library(cowplot)
-```
-
-## The data
-
-```{r}
-# Birth weights for every baby born in North Carolina.
-bw_pop <- read.csv('../data/nc_birth_weights.csv')
-bw_pop_vals <- bw_pop[['birth_weight']]
-pop_mean <- mean(bw_pop_vals)
-```
-
-But - we are very rarely in the situation where we know the values for the
-entire population.   We are usually in the case where we have some random
-sample of values from this population.
-
-So, let's say we are in this typical situation, and we don't know anything
-about the underlying population yet.  All we have is a single random sample of
-50 values, that someone has taken for us.
-
-```{r}
-# A random sample of birthweights that someone has taken for us.
-bw_sample <- read.csv('../data/nc_birth_weights_sample.csv')
-bw_sample_vals <- bw_sample[['birth_weight']]
-sample_mean <- mean(bw_sample_vals)
+source('../confidence_plots.R')
 ```
 
 ```{r}
-# The size of our sample(s).
-n <- 50
+#| tags: [remove_input]
+bw_sample_vals
 ```
 
+## A lonely distribution
+
 ```{r}
-tbw <- theme_set(theme_bw())
-breaks <- seq(0.2, 5.5, by=0.2)
+#| tags: [remove_input]
+plot_bw(bw_sample) + labs(title = 'Our sample') + samp_ylims
+```
 
-plot_bw <- function(df) {
-    if (nrow(df) > 1000) {  # Population
-        fill_col <- 'light grey'
-        mean_col <- 'blue'
-    } else {  # Sample
-        fill_col <- 'dark grey'
-        mean_col <- 'red'
-    }
-    mean_val <- mean(df[['birth_weight']])
-    label <- glue('Mean: {round(mean_val, 2)}')
-    p <- (
-        ggplot(df, aes(birth_weight))
-        + geom_histogram(fill = fill_col, breaks = breaks)
-        + geom_vline(aes(xintercept=mean_val, colour=label),
-                     linewidth=1,
-                     linetype='dashed')
-        + labs(x = "Birth weight", colour="")  # Reset colour for later.
-        + scale_colour_manual(values=mean_col)
-        + theme(legend.position=c(0.25, 0.8),
-                legend.text = element_text(size=15),
-                aspect.ratio=0.7)
-    )
-}
+## So where's the problem?
 
+I have my sample mean.
+
+But I want to know the mean of the *population* (all births in the state).
+
+I don't have the population values.
+
+We now come to the crucial problem in statistics: given my *sample*, what can I say about the *population*?
+
+Here: given my sample, what can I say about the population mean?
+
+## Sampling variation
+
+We have to think about the process by which our sample came about.
+
+It was a random sample from all the births.
+
+Because it was a random sample, the mean of the sample is also somewhat
+random.
+
+## The curtain pulls back
+
+In 2010, I will get all the state's data.  This is the *population* from which the sample is drawn.   It will turn out that it looks like this:
+
+```{r}
+#| tags: [remove_input]
 pop_p <- plot_bw(bw_pop) + labs(
     title = 'All NC birth weights',
     subtitle = '(Population)')
 pop_p
 ```
 
-Note that one can get axis limits like this:
+## Why is my sample mean (a little bit) random?
+
+Let's stay in 2010, and draw four more samples.
 
 ```{r}
-# https://stackoverflow.com/a/62819446
-layer_scales(pop_p)$y$get_limits()
-```
-
-```{r}
-samp_ylims = ylim(0, 15)
-p0 <- plot_bw(bw_sample) + labs(
-    title = 'Our sample') + samp_ylims
-p0
-```
-
-```{r}
-set.seed(1939)
-n <- 50
-n_samples <- 5
-samples <- list()
-for (i in 2:(n_samples + 1)) {
-    sample <- sample_n(bw_pop, n)
-    name <- sprintf('%d', i)
-    p <- (plot_bw(sample)
-          + labs(title = glue('Sample {name}'))
-          + samp_ylims)
-    samples[[name]] = list(sample=sample, plot=p, mean=mean(sample[['birth_weight']]))
-}
-```
-
-```{r}
-plots = list()
-for (name in names(samples)) {
-    v <- samples[[name]]
-    plots[[name]] <- (v[['plot']]
-                    + theme_half_open(12)
-                    + theme(legend.position='none')
-                    + labs(title=NULL)
-                    + xlab(glue('Mean: {round(v[["mean"]], 2)}'))
-                    )
-}
-plots[[1]] <- plots[[1]] + ylab('Counts')
-```
-
-From: <https://wilkelab.org/cowplot/articles/shared_legends.html>
-
-```{r}
+#| tags: [remove_input]
+# From: <https://wilkelab.org/cowplot/articles/shared_legends.html>
 p_samps <- plot_grid(
     plotlist = plots,
     align = 'vh',
@@ -139,66 +85,25 @@ p_samps <- plot_grid(
 p_samps
 ```
 
-```{r}
-# Estimated SD of sampling distribution of mean.
-sem <- sd(bw_pop_vals) / sqrt(n)
-sem
-```
+## Building the sampling distribution
+
+Notice that, each time I draw a new sample, I get a slightly different sample
+mean.
 
 ```{r}
-samp_lims <- pop_mean + sem * c(-4, 4)
-samp_lims
-```
-
-```{r}
-samp_dists = list()
-means = data.frame(sample_mean=numeric())
-samp_breaks = seq(2.9, 3.6, 0.1)
-mean_col = 'green'
-for (name in names(samples)) {
-    means[nrow(means) + 1,] = samples[[name]][['mean']]
-    p <- (
-        ggplot(means, aes(sample_mean))
-        + geom_histogram(breaks = samp_breaks)
-        + xlab('Mean birth weight')
-        + ylim(0, 5)
-        + theme_half_open(12)
-        + labs(title=NULL)
-    )
-    samp_dists[[name]] <- p
-}
-```
-
-```{r}
-p_mean_dist <- plot_grid(
-    plotlist = samp_dists,
-    align = 'vh',
-    labels = sapply(1:n_samples, function(i) glue('H{i + 1}')),
-    nrow = 1
-)
-p_mean_dist
-```
-
-```{r}
+#| tags: [remove_input]
 p_whole <- plot_grid(
     pop_p + labs(title=NULL) + theme(legend.position='none'),
-    p_samps, p_mean_dist, ncol = 1)
+    plot_grid(plotlist = plots, align = 'vh', nrow = 1),
+    plot_grid(plotlist = samp_dists, align = 'vh', nrow = 1),
+    ncol = 1)
 p_whole
 ```
 
-```{r}
-n_iters <- 10000
-samp_dist_vals <- numeric(n_iters)
-for (i in 1:n_iters) {
-    sample <- sample(bw_pop_vals, n)
-    samp_dist_vals[i] <- mean(sample)
-}
-samp_dist <- data.frame(sample_mean=samp_dist_vals)
-m_samp_dist <- mean(samp_dist_vals)
-```
+## With 10,000 samples ...
 
 ```{r}
-samp_bin_width <- 0.01
+#| tags: [remove_input]
 full_samp_breaks <- seq(2.9, 3.6, samp_bin_width)
 m_s_d <- mean(samp_dist_vals)
 x_label <- glue('Sample means: mean {round(m_s_d, 2)}')
@@ -215,14 +120,10 @@ p_s_dist <- (
 p_s_dist
 ```
 
+## Cartoon of sampling distribution
 
 ```{r}
-kde <- density(samp_dist_vals, bw=0.02)
-kde_df <- data.frame(x = kde$x, y = kde$y * n_iters * samp_bin_width)
-head(kde_df)
-```
-
-```{r}
+#| tags: [remove_input]
 p <- (ggplot(samp_dist, aes(sample_mean))
       + geom_histogram(breaks = full_samp_breaks, alpha=0.5)
       + geom_line(data = kde_df, aes(x = x, y = y),
@@ -231,97 +132,161 @@ p <- (ggplot(samp_dist, aes(sample_mean))
 p
 ```
 
-```{r}
-plot_ssamp_dist <- function(df, offset=0) {
-    df <- data.table::copy(df)
-    df$x <- df$x + offset
-    return (
-        ggplot(df, aes(df))
-        + geom_area(aes(x = x, y = y), linewidth=2, alpha=0.5)
-        + labs(x = 'Sample mean', y = 'Count',
-               title = 'Sampling distribution')
-        + geom_vline(aes(xintercept = m_samp_dist + offset),
-                     linetype='dashed')
-    )
-}
+## Estimating the sampling distribution
 
-plot_ssamp_dist(kde_df)
+It turns out we can get a decent estimate of the sampling distribution, from the distribution of the sample itself (ask me how!).
+
+```{r}
+#| tags: [remove_input]
+plot_bw(bw_sample) + labs(title = 'Our sample') + samp_ylims
 ```
 
-```{r}
-plot_ssamp_dist(kde_df, 6)
-```
+However, this estimate does not tell us more about the *population mean*, only the size and shape of the sampling distribution.
+
+## Sampling distribution estimate
 
 ```{r}
-kde_cdf <- cumsum(kde$y / sum(kde$y))
-le_025 <- kde_cdf <= 0.025
-ge_975 <- kde_cdf >= 0.975
-lower_tail <- subset(kde_df, le_025)
-upper_tail <- subset(kde_df, ge_975)
-lo_025_th <- max(lower_tail$x)
-hi_975_th <- min(upper_tail$x)
+#| tags: [remove_input]
+rm_x_ticks <- theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+(ggplot(samp_dist, aes(sample_mean))
+      + geom_area(data = kde_df, aes(x = x, y = y), alpha=0.5)
+      + rm_x_ticks
+      )
 ```
 
+## {background-video="moving_dist.mp4" background-video-loop="true" background-size="contain"}
+
+## What can we do with this?
+
+With the size and shape, we can estimate where the 2.5% and 97.5% tails are on
+the distribution, relative to the mean.
+
 ```{r}
-plot_mdist_tails <- function(df, offset=0) {
+#| tags: [remove_input]
+
+plot_mdist_tails <- function(df, offset=0, tails='both') {
     p <- plot_ssamp_dist(df, offset)
     lt <- data.table::copy(lower_tail)
     lt$x <- lt$x + offset
     ut <- data.table::copy(upper_tail)
     ut$x <- ut$x + offset
-    return (p
-            + geom_area(data = lt, aes(x=x, y=y), fill="red")
-            + geom_area(data = ut, aes(x=x, y=y), fill="red")
-           )
+    if (tails %in% c('both', 'left')) {
+        p <- p + geom_area(data = lt, aes(x=x, y=y), fill="red")
+    }
+    if (tails %in% c('both', 'right')) {
+        p <- p + geom_area(data = ut, aes(x=x, y=y), fill="red")
+    }
+    p
 }
 
-plot_mdist_tails(kde_df, 3)
+
+plot_with_arrows <- function(df, offset=0, arrows='both') {
+    p <- plot_mdist_tails(df, offset, tails=arrows)
+    mid_upper <- m_samp_dist - upper_diff / 2
+    mid_lower <- m_samp_dist - lower_diff / 2
+    e <- 0.01
+    if (arrows %in% c('both', 'left')) {
+        p <- (p
+        + geom_segment(aes(x = lo_025_th + e + offset,
+                           y = 30,
+                           xend = m_samp_dist - e + offset,
+                           yend = 30),
+                       arrow = arrow(length = unit(0.5, "cm")))
+        + annotate("text", x = mid_upper + offset,
+                   y = 50,
+                   label = glue('{round(upper_diff, 2)}'))
+        )
+    }
+    if (arrows == 'both' | arrows == 'right') {
+        p <- (p
+        + geom_segment(aes(x = hi_975_th - e + offset,
+                           y = 30,
+                           xend = m_samp_dist + e + offset,
+                           yend = 30),
+                       arrow = arrow(length = unit(0.5, "cm")))
+        + annotate("text",
+                   x = mid_lower + offset,
+                   y = 50,
+                   label = glue('{round(lower_diff, 2)}'))
+        )
+    }
+    p
+}
+
+plot_with_arrows(kde_df) + rm_x_ticks
 ```
 
-```{r}
-lo_025_th <- max(lower_tail$x)
-hi_975_th <- min(upper_tail$x)
-upper_diff <- m_samp_dist - lo_025_th
-lower_diff <- m_samp_dist - hi_975_th
-c(upper_diff, lower_diff)
-```
+## Confidence intervals
+
+We know our sample mean came from the sampling distribution of the mean.
+
+But we don't know where the population mean is.
+
+Assume we were unlucky, and our sample mean is low, and at the 2.5 percentile.
+
+## How high could the population mean be?
+
+Assume our sample mean is at the 2.5 percentile of the sampling distribution.
+
+Superimpose the sampling distribution estimate.
+
+## Sample mean at 2.5 percentile
 
 ```{r}
-e <- 0.01
-(plot_mdist_tails(kde_df)
- + geom_segment(aes(x = lo_025_th + e, y = 30,
-                    xend = m_samp_dist - e, yend = 30),
-                arrow = arrow(length = unit(0.5, "cm")))
- + geom_segment(aes(x = hi_975_th - e, y = 30,
-                    xend = m_samp_dist + e, yend = 30),
-                arrow = arrow(length = unit(0.5, "cm")))
+sm_label = glue('Sample mean = {round(sample_mean, 2)}')
+offset = sample_mean + upper_diff - pop_mean
+(plot_with_arrows(kde_df, offset, arrows='left')
+ + labs(x = '')
+ + geom_vline(aes(xintercept=sample_mean),
+              linewidth=1,
+              linetype='dashed')
+ + annotate("text",
+            x = sample_mean - 0.11,
+            y = 400,
+            label = sm_label)
  )
 ```
 
 ```{r}
-library(animation)
-
-build_moving <- function(vid_len, video_name = 'moving_dist.mp4') {
-    offsets <- sin(seq(0, 2 * pi, 0.05))
-
-    min_x <- min(kde$x) - 0.7
-    max_x <- max(kde$x) + 0.7
-
-    # vid_len in seconds.
-    fps <- length(offsets) / vid_len
-
-    saveVideo(
-        {
-            ani.options(interval = 1 / fps)
-            for (i in 1:length(offsets)) {
-                offset <- offsets[i]
-                p <- plot_ssamp_dist(kde_df, offset)
-                p <- p + xlim(min_x, max_x)
-                plot(p)
-            }
-        },
-        video.name = video_name
-    )
-}
+#| echo: false
+r_sm <- round(sample_mean, 2)
+r_ud <- round(upper_diff, 2)
+r_ld <- round(lower_diff, 2)
 ```
 
+Barely likely unlucky case (sample mean low), population mean is `{r} r_sm`
++ `{r} r_ud` = `{r} r_sm + r_ud`.
+
+## How low could the population mean be?
+
+Assume our sample mean is at the 97.5 percentile of the sampling distribution.
+
+Superimpose the sampling distribution estimate.
+
+## Sample mean at 97.5 percentile
+
+```{r}
+offset = sample_mean + lower_diff - pop_mean
+(plot_with_arrows(kde_df, offset, arrow='right')
+ + labs(x = '')
+ + geom_vline(aes(xintercept=sample_mean),
+              linewidth=1,
+              linetype='dashed')
+ + annotate("text",
+            x = sample_mean + 0.11,
+            y = 400,
+            label = sm_label)
+ )
+```
+
+Barely likely unlucky case (sample mean high), population mean is `{r} r_sm`
+- `{r} -r_ld` = `{r} r_sm + r_ld`.
+
+## Confidence intervals
+
+The me of 2009, before I saw the population data, can say:
+
+> Given my sample, the 95% confidence intervals for the population mean are
+> `{r} r_sm + r_ld` to `{r} r_sm + r_ud`.
