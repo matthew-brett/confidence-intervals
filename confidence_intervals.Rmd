@@ -17,7 +17,10 @@ jupyter:
 # An R tutorial on confidence intervals
 
 
-Here is a *population* of values.  In fact, in our case, it is a complete collection of the birth weights for all children born in North Carolina in 2008.  See <https://github.com/odsti/datasets/tree/main/birth_weights> for more on the source of the data.
+Here is a *population* of values.  In fact, in our case, it is a complete
+collection of the birth weights for all children born in North Carolina in
+2008.  See <https://github.com/odsti/datasets/tree/main/birth_weights> for more
+on the source of the data.
 
 ```{r}
 # Birth weights for every baby born in North Carolina.
@@ -30,9 +33,13 @@ bw_pop_vals
 hist(bw_pop_vals)
 ```
 
-But - we are very rarely in the situation where we know the values for the entire population.   We are usually in the case where we have some random sample of values from this population.
+But - we are very rarely in the situation where we know the values for the
+entire population.   We are usually in the case where we have some random
+sample of values from this population.
 
-So, let's say we are in this typical situation, and we don't know anything about the underlying population yet.  All we have is a single random sample of 50 values, that someone has taken for us.
+So, let's say we are in this typical situation, and we don't know anything
+about the underlying population yet.  All we have is a single random sample of
+50 values, that someone has taken for us.
 
 ```{r}
 # A random sample of birthweights that someone has taken for us.
@@ -52,7 +59,8 @@ Here's a histogram of our given sample:
 hist(bw_sample_vals)
 ```
 
-All we know is the sample.  We can make a guess at the mean of the population, by taking the mean of the sample:
+All we know is the sample.  We can make a guess at the mean of the population,
+by taking the mean of the sample:
 
 ```{r}
 sample_mean <- mean(bw_sample_vals)
@@ -66,11 +74,18 @@ pop_mean <- mean(bw_pop_vals)
 pop_mean
 ```
 
-And in general this will be true, because we have drawn a *random sample* from the population.  The sample will have a random set of individuals, and, just by chance, sometimes these will tend to be a bit lighter than (the population) average, sometimes a bit heavier.  And in fact, if we could draw lots of samples from the population, we would find that the mean of the sample tends to be around the mean of population, *plus or minus a bit*.
+And in general this will be true, because we have drawn a *random sample* from
+the population.  The sample will have a random set of individuals, and, just by
+chance, sometimes these will tend to be a bit lighter than (the population)
+average, sometimes a bit heavier.  And in fact, if we could draw lots of
+samples from the population, we would find that the mean of the sample tends to
+be around the mean of population, *plus or minus a bit*.
 
-That is, the mean of a random sample is, itself, a little bit random, because it depends on the sample.
+That is, the mean of a random sample is, itself, a little bit random, because
+it depends on the sample.
 
-Let's cheat, and do something that we can't normally do, which is to draw another sample from the same population.
+Let's cheat, and do something that we can't normally do, which is to draw
+another sample from the same population.
 
 Notice it has a slightly different mean.
 
@@ -80,7 +95,9 @@ another_sample <- sample(bw_pop_vals, size=50)
 mean(another_sample)
 ```
 
-Now we'll cheat even more, and we'll draw 10,000 samples from the population, where each sample is the same size as our original sample (50).  Each time we draw a new sample, we'll record mean of that sample.
+Now we'll cheat even more, and we'll draw 10,000 samples from the population,
+where each sample is the same size as our original sample (50).  Each time we
+draw a new sample, we'll record mean of that sample.
 
 ```{r}
 # Draw 10,000 samples.  Take the mean of each sample, and record it.
@@ -93,15 +110,18 @@ for (i in 1:10000) {
 sample_means
 ```
 
-Remember, the sample mean is going to be somewhere near the population mean, plus or minus a bit.  Here's the spread of the sample means we saw.
+Remember, the sample mean is going to be somewhere near the population mean,
+plus or minus a bit.  Here's the spread of the sample means we saw.
 
-This is called the *sampling distribution of the mean*, because it is the distribution of means, when we take multiple samples (in our case, size 50).
+This is called the *sampling distribution of the mean*, because it is the
+distribution of means, when we take multiple samples (in our case, size 50).
 
 ```{r}
 hist(sample_means, main='Sampling distribution of mean (n=50)')
 ```
 
-Notice that, on average, the sample mean will tend to be similar to the population mean:
+Notice that, on average, the sample mean will tend to be similar to the
+population mean:
 
 ```{r}
 mean(sample_means)
@@ -111,7 +131,10 @@ mean(sample_means)
 mean(bw_pop_vals)
 ```
 
-We can also think of this sampling distribution, as the distribution of *errors*.   Each time we take a sample, and calculate the mean, we can ask how far the sample mean is from the population mean.  This difference, between the sample mean and population mean, is the *error* of sample mean.
+We can also think of this sampling distribution, as the distribution of
+*errors*.   Each time we take a sample, and calculate the mean, we can ask how
+far the sample mean is from the population mean.  This difference, between the
+sample mean and population mean, is the *error* of sample mean.
 
 ```{r}
 # Draw another random sample.  Look at the mean.
@@ -125,34 +148,51 @@ error_of_sample_mean <- yet_another_mean - pop_mean
 error_of_sample_mean
 ```
 
-If we subtract the population mean from each of the sample means we calculated above, we get 10,000 *errors* - differences between each sample mean and the population mean.
+If we subtract the population mean from each of the sample means we calculated
+above, we get 10,000 *errors* - differences between each sample mean and the
+population mean.
 
 ```{r}
 sample_mean_errors <- sample_means - pop_mean
 hist(sample_mean_errors, main='Sampling distribution of error of mean')
 ```
 
-Just while we're here, the standard deviation of this distribution is our old friend, the *standard error of the mean*.  But I digress.
+Just while we're here, the standard deviation of this distribution is our old
+friend, the *standard error of the mean*.  But I digress.
 
 
-OK, now let's go back to the world that I started with, where I knew nothing of population, but I have a random sample from the population, and that sample has a particular mean (that we've seen):
+OK, now let's go back to the world that I started with, where I knew nothing of
+population, but I have a random sample from the population, and that sample has
+a particular mean (that we've seen):
 
 ```{r}
 mean(bw_sample_vals)
 ```
 
-At the moment, I have difficult problem.   What can I say about the population mean, given the sample mean?  I guess the population mean will be somewhere near the sample mean - but how near?   Put another way, the population mean will be the sample mean, *plus or minus a bit*.   But how do I quantify this *plus or minus a bit*?
+At the moment, I have difficult problem.   What can I say about the population
+mean, given the sample mean?  I guess the population mean will be somewhere
+near the sample mean - but how near?   Put another way, the population mean
+will be the sample mean, *plus or minus a bit*.   But how do I quantify this
+*plus or minus a bit*?
 
 
-Let's start by cheating.  To help me, you kindly give me the sampling distribution of the errors of the mean above.  You haven't helped me too much, because the distribution of the errors doesn't tell me about the population mean, only the spread of the errors.  So - how can I use that?
+Let's start by cheating.  To help me, you kindly give me the sampling
+distribution of the errors of the mean above.  You haven't helped me too much,
+because the distribution of the errors doesn't tell me about the population
+mean, only the spread of the errors.  So - how can I use that?
 
 
-We don't know where our actual sample mean (`sample_mean <- mean(bw_sample`)) comes from on that distribution of errors.  Perhaps we were unlucky and our sample has an unusually low mean (high negative error).  Or perhaps we were equally unlucky and our sample has an unusually high mean (high positive error).
+We don't know where our actual sample mean (`sample_mean <- mean(bw_sample`))
+comes from on that distribution of errors.  Perhaps we were unlucky and our
+sample has an unusually low mean (high negative error).  Or perhaps we were
+equally unlucky and our sample has an unusually high mean (high positive
+error).
 
 
 Let's consider those two cases.
 
-Let's say I'm unlucky, but not very unlucky, and my sample mean has an error that is exactly at the bottom 2.5% of the error distribution:
+Let's say I'm unlucky, but not very unlucky, and my sample mean has an error
+that is exactly at the bottom 2.5% of the error distribution:
 
 ```{r}
 # Where is the 2.5% cut-off for the sample mean errors distribution?
@@ -160,14 +200,17 @@ bottom_2p5_error <- quantile(sample_mean_errors, 0.025)
 bottom_2p5_error
 ```
 
-OK, so if I am in that situation, where I have an error that in the 2.5% percentile, then to find the population mean, I'd have to add (back) the error.  So, if I'm in that situation, to get the population mean, I'd do this:
+OK, so if I am in that situation, where I have an error that in the 2.5%
+percentile, then to find the population mean, I'd have to add (back) the error.
+So, if I'm in that situation, to get the population mean, I'd do this:
 
 ```{r}
 looking_up_from_low <- sample_mean - bottom_2p5_error
 looking_up_from_low
 ```
 
-Conversely, imagine I was unlucky and I got a sample mean at the top 5% of error:
+Conversely, imagine I was unlucky and I got a sample mean at the top 5% of
+error:
 
 ```{r}
 top_2p5_error = quantile(sample_mean_errors, 0.975)
@@ -179,37 +222,53 @@ looking_down_from_high <- sample_mean - top_2p5_error
 looking_down_from_high
 ```
 
-What have I learned?   That if my sample mean is unlucky low, then I should go up from my sampling mean to find the population mean.  And if my sample mean is unlucky high, I should go down from my sampling mean to find the population mean.   And so, given my sample mean, I can conclude, with 95% confidence, that my population mean is somewhere between:
+What have I learned?   That if my sample mean is unlucky low, then I should go
+up from my sampling mean to find the population mean.  And if my sample mean is
+unlucky high, I should go down from my sampling mean to find the population
+mean.   And so, given my sample mean, I can conclude, with 95% confidence, that
+my population mean is somewhere between:
 
 ```{r}
 confidence_interval = c(looking_down_from_high, looking_up_from_low)
 confidence_interval
 ```
 
-I would say this - given my sample mean, the population mean is likely (in the 95% sense) to be somewhere between these two values.
+I would say this - given my sample mean, the population mean is likely (in the
+95% sense) to be somewhere between these two values.
 
 
-Just so you can see I am not crazy, here is the confidence interval calculated in a slightly different way (using some mathematical assumptions).  It gives a similar result.
+Just so you can see I am not crazy, here is the confidence interval calculated
+in a slightly different way (using some mathematical assumptions).  It gives
+a similar result.
 
 ```{r}
 # Calculate the confidence intervals using normal distribution assumptions.
 confint(lm(bw_sample_vals ~ 1))
 ```
 
-OK - so you at once complain - you have a sample, but you do not have a helpful person who can give you the distribution of the sampling errors of the mean.
+OK - so you at once complain - you have a sample, but you do not have a helpful
+person who can give you the distribution of the sampling errors of the mean.
 
-There are various ways to solve that problem.  One of them is the trick above, where R used some assumptions from the normal distribution to estimate the spread of the sampling errors, from the spread of the values in the sample.
+There are various ways to solve that problem.  One of them is the trick above,
+where R used some assumptions from the normal distribution to estimate the
+spread of the sampling errors, from the spread of the values in the sample.
 
 Here's another way.
 
 
-We would like to simulate drawing thousands of samples from the population, but we do not have the population.
+We would like to simulate drawing thousands of samples from the population, but
+we do not have the population.
 
 Is there any way we can make something that can stand in for the population?
 
-Well - we have the values from the original sample.  Each of these values are values from the population.  Why don't we make something a bit like the original population, by taking each of the original values in the sample, and repeating them 1000 times.   Now, instead of 50 values in our sample, we have 50,000 values.
+Well - we have the values from the original sample.  Each of these values are
+values from the population.  Why don't we make something a bit like the
+original population, by taking each of the original values in the sample, and
+repeating them 1000 times.   Now, instead of 50 values in our sample, we have
+50,000 values.
 
-We do this using the `rep` function in R.  It repeats a sequence of values as many times as we ask it to.
+We do this using the `rep` function in R.  It repeats a sequence of values as
+many times as we ask it to.
 
 For sample, here R repeats the sequence (1, 2) 10 times.
 
@@ -229,7 +288,8 @@ Here (again) is the histogram of that sample.
 hist(bw_sample_vals, breaks=10)
 ```
 
-Now we make something to stand in for the population, by repeating each value in the sample 1000 times.
+Now we make something to stand in for the population, by repeating each value
+in the sample 1000 times.
 
 ```{r}
 fake_population <- rep(bw_sample_vals, 1000)
@@ -242,7 +302,10 @@ Notice that the histogram is the same, just with 1000 more values in each bin.
 hist(fake_population, breaks=10)
 ```
 
-We can go ahead and draw 10,000 samples from this fake population, to get an idea of how much the mean varies from one sample to the next.  Let's do the same thing as before, and subtract the overall mean (in this case, the mean of the *sample* from each sample mean, to give the *sampling error*:
+We can go ahead and draw 10,000 samples from this fake population, to get an
+idea of how much the mean varies from one sample to the next.  Let's do the
+same thing as before, and subtract the overall mean (in this case, the mean of
+the *sample* from each sample mean, to give the *sampling error*:
 
 ```{r}
 # Draw 10,000 samples from the fake population.  Record the means.
@@ -255,13 +318,16 @@ for (i in 1:10000) {
 hist(fake_sample_mean_errors)
 ```
 
-Notice that this looks very much like the cheat we did when we drew 10,000 actual samples from the actual population (that we aren't meant to have):
+Notice that this looks very much like the cheat we did when we drew 10,000
+actual samples from the actual population (that we aren't meant to have):
 
 ```{r}
 hist(sample_mean_errors)
 ```
 
-Accordingly, we can use this distribution of fake sample mean errors to estimate the distribution of the sample mean errors, and calculate the confidence intervals accordingly:
+Accordingly, we can use this distribution of fake sample mean errors to
+estimate the distribution of the sample mean errors, and calculate the
+confidence intervals accordingly:
 
 ```{r}
 bottom_looking_up <- sample_mean - quantile(fake_sample_mean_errors, 0.025)
@@ -269,10 +335,13 @@ top_looking_down <- sample_mean - quantile(fake_sample_mean_errors, 0.975)
 c(top_looking_down, bottom_looking_up)
 ```
 
-This calculation above is called the *basic bootstrap* or *reverse percentile interval*, and it is one standard way to calculate confidence intervals from a sample, with no extra information about the population.
+This calculation above is called the *basic bootstrap* or *reverse percentile
+interval*, and it is one standard way to calculate confidence intervals from
+a sample, with no extra information about the population.
 
 
-Here's the same calculation using the standard R package for bootstrap confidence intervals.
+Here's the same calculation using the standard R package for bootstrap
+confidence intervals.
 
 ```{r}
 # The standard R package for calculating bootstrap confidence intervals.
@@ -280,7 +349,9 @@ Here's the same calculation using the standard R package for bootstrap confidenc
 library(boot)
 ```
 
-The result won't be exactly the same because the bootstrap samples are random, so there is some randomness to the confidence intervals.  Try running the `boot.ci` line a few times to see how the confidence intervals vary.
+The result won't be exactly the same because the bootstrap samples are random,
+so there is some randomness to the confidence intervals.  Try running the
+`boot.ci` line a few times to see how the confidence intervals vary.
 
 ```{r}
 # A function needed for the bootstrap calculation; just return the bootstrap sample mean.
