@@ -5,7 +5,7 @@ website:
   title: "slides"
   navbar:
     left:
-      - href: confidence_plots.qmd
+      - href: confidence_intervals.qmd
         text: Home
 
 format:

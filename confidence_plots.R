@@ -66,8 +66,6 @@ pop_p <- plot_bw(bw_pop) + labs(
 pop_p
 # -
 
-ggsave('population.png', pop_p)
-
 # Note that one can get axis limits like this:
 
 # https://stackoverflow.com/a/62819446
@@ -77,7 +75,6 @@ layer_scales(pop_p)$y$get_limits()
 samp_ylims = ylim(0, 15)
 p0 <- plot_bw(bw_sample) + labs(
     title = 'Our sample') + samp_ylims
-ggsave('our_sample.png', p0)
 p0
 
 set.seed(1939)
@@ -90,7 +87,6 @@ for (i in 2:(n_samples + 1)) {
     p <- (plot_bw(sample)
           + labs(title = glue('Sample {name}'))
           + samp_ylims)
-    ggsave(glue('sample{name}.png'), p)
     samples[[name]] = list(sample=sample, plot=p, mean=mean(sample[['birth_weight']]))
 }
 
@@ -115,9 +111,6 @@ p_samps <- plot_grid(
     nrow = 1
 )
 p_samps
-
-# https://rdrr.io/cran/cowplot/man/save_plot.html
-save_plot('five_samples.png', p_samps, base_asp=4)
 
 # Estimated SD of sampling distribution of mean.
 sem <- sd(bw_pop_vals) / sqrt(n)
@@ -156,8 +149,6 @@ p_whole <- plot_grid(
     p_samps, p_mean_dist, ncol = 1)
 p_whole
 
-save_plot('whole_grid.png', p_whole, base_asp=4)
-
 n_iters <- 10000
 samp_dist_vals <- numeric(n_iters)
 for (i in 1:n_iters) {
@@ -182,8 +173,6 @@ p_s_dist <- (
     + labs(title='Sampling distribution of mean')
 )
 p_s_dist
-
-ggsave('sampling_distribution.png', p_s_dist)
 
 kde <- density(samp_dist_vals, bw=0.02)
 kde_df <- data.frame(x = kde$x, y = kde$y * n_iters * samp_bin_width)

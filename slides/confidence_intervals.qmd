@@ -84,10 +84,6 @@ pop_p <- plot_bw(bw_pop) + labs(
 pop_p
 ```
 
-```{r}
-ggsave('population.png', pop_p)
-```
-
 Note that one can get axis limits like this:
 
 ```{r}
@@ -99,7 +95,6 @@ layer_scales(pop_p)$y$get_limits()
 samp_ylims = ylim(0, 15)
 p0 <- plot_bw(bw_sample) + labs(
     title = 'Our sample') + samp_ylims
-ggsave('our_sample.png', p0)
 p0
 ```
 
@@ -114,7 +109,6 @@ for (i in 2:(n_samples + 1)) {
     p <- (plot_bw(sample)
           + labs(title = glue('Sample {name}'))
           + samp_ylims)
-    ggsave(glue('sample{name}.png'), p)
     samples[[name]] = list(sample=sample, plot=p, mean=mean(sample[['birth_weight']]))
 }
 ```
@@ -143,11 +137,6 @@ p_samps <- plot_grid(
     nrow = 1
 )
 p_samps
-```
-
-```{r}
-# https://rdrr.io/cran/cowplot/man/save_plot.html
-save_plot('five_samples.png', p_samps, base_asp=4)
 ```
 
 ```{r}
@@ -198,10 +187,6 @@ p_whole
 ```
 
 ```{r}
-save_plot('whole_grid.png', p_whole, base_asp=4)
-```
-
-```{r}
 n_iters <- 10000
 samp_dist_vals <- numeric(n_iters)
 for (i in 1:n_iters) {
@@ -230,9 +215,6 @@ p_s_dist <- (
 p_s_dist
 ```
 
-```{r}
-ggsave('sampling_distribution.png', p_s_dist)
-```
 
 ```{r}
 kde <- density(samp_dist_vals, bw=0.02)
