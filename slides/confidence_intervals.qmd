@@ -104,7 +104,9 @@ p_whole
 
 ```{r}
 #| tags: [remove_input]
-full_samp_breaks <- seq(2.9, 3.6, samp_bin_width)
+sd_lo = 2.9
+sd_hi = 3.6
+full_samp_breaks <- seq(sd_lo, sd_hi, samp_bin_width)
 m_s_d <- mean(samp_dist_vals)
 x_label <- glue('Sample means: mean {round(m_s_d, 2)}')
 p_s_dist <- (
@@ -114,6 +116,7 @@ p_s_dist <- (
                  linewidth=1,
                  linetype='dashed')
     + labs(x = x_label)
+    + xlim(c(sd_lo, sd_hi))
     + theme(legend.position='none')
     + labs(title='Sampling distribution of mean')
 )
@@ -128,6 +131,9 @@ p <- (ggplot(samp_dist, aes(sample_mean))
       + geom_histogram(breaks = full_samp_breaks, alpha=0.5)
       + geom_line(data = kde_df, aes(x = x, y = y),
                   linewidth=2)
+      + xlim(c(sd_lo, sd_hi))
+      + labs(x = 'Sample means')
+      + labs(title='Sampling distribution of mean')
       )
 p
 ```
