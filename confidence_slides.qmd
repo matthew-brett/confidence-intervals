@@ -5,6 +5,13 @@ date: 24 April 2025
 format: revealjs
 ---
 
+```{r}
+library(dplyr)
+library(glue)
+library(ggplot2)
+library(cowplot)
+```
+
 ## A confounded statistician
 
 It is 2009, and I'm a statistician working in North Carolina.
@@ -20,8 +27,7 @@ They have given me a random sample of 50 birth weights.
 ## The lonely sample
 
 ```{r}
-#| tags: [remove_input]
-source('../confidence_plots.R')
+source('confidence_plots.R')
 ```
 
 ```{r}

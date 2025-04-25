@@ -1,11 +1,13 @@
 project:
   type: website
+  render:
+    - "*.qmd"
 
 website:
   title: "slides"
   navbar:
     left:
-      - href: confidence_intervals.qmd
+      - href: confidence_slides.qmd
         text: Home
 
 format:

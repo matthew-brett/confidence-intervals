@@ -43,7 +43,7 @@ jobs:
 
       - name: Render Quarto Project
         shell: bash
-        run: quarto render slides --output-dir ../_site
+        run: quarto render --output-dir _site
 
       - uses: actions/configure-pages@v5
 
