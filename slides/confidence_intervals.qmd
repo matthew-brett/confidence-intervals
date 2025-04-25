@@ -162,7 +162,9 @@ rm_x_ticks <- theme(axis.title.x=element_blank(),
 (I've removed the labels on the x-axis to show we do not know exactly where to
 place this distribution on the x-axis).
 
-## {background-video="moving_dist.mp4" background-video-loop="true" background-size="contain"}
+## Distribution estimate and x-axis
+
+{{< video moving_dist.mp4 height=600 width=900 >}}
 
 ## What can we do with this?
 
@@ -179,10 +181,10 @@ plot_mdist_tails <- function(df, offset=0, tails='both') {
     ut <- data.table::copy(upper_tail)
     ut$x <- ut$x + offset
     if (tails %in% c('both', 'left')) {
-        p <- p + geom_area(data = lt, aes(x=x, y=y), fill="red")
+        p <- p + geom_area(data = lt, aes(x=x, y=y), fill="red", alpha=0.5)
     }
     if (tails %in% c('both', 'right')) {
-        p <- p + geom_area(data = ut, aes(x=x, y=y), fill="red")
+        p <- p + geom_area(data = ut, aes(x=x, y=y), fill="red", alpha=0.5)
     }
     p
 }
@@ -246,8 +248,7 @@ offset = sample_mean + upper_diff - pop_mean
 (plot_with_arrows(kde_df, offset, arrows='left')
  + labs(x = '')
  + geom_vline(aes(xintercept=sample_mean),
-              linewidth=1,
-              linetype='dashed')
+              linewidth=1, linetype='dashed')
  + annotate("text",
             x = sample_mean - 0.11,
             y = 400,
@@ -296,3 +297,9 @@ The me of 2009, before I saw the population data, can say:
 
 > Given my sample, the 95% confidence intervals for the population mean are
 > `{r} r_sm + r_ld` to `{r} r_sm + r_ud`.
+
+## What does the 95% mean?
+
+Using this calculation, 95% of random samples from this distribution will give
+us upper and lower bounds (confidence intervals) that include the population
+mean.

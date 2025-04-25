@@ -1,4 +1,4 @@
-slides: slides/confidence_intervals.qmd
+presentation:
 	quarto render slides --output-dir ../_site
 
 clean:

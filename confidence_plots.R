@@ -61,7 +61,6 @@ plot_bw <- function(df) {
     )
 }
 
-
 samp_ylims = ylim(0, 15)
 
 # Make some random samples.
@@ -156,11 +155,13 @@ lower_diff <- m_samp_dist - hi_975_th
 # Function to generate animation.
 library(animation)
 
-build_moving <- function(vid_len = 6, video_name = 'moving_dist.mp4') {
-    offsets <- sin(seq(0, 2 * pi, 0.05))
+build_moving <- function(vid_len = 6,
+                         sin_scale = 0.3,
+                         video_name = 'moving_dist.mp4') {
+    offsets <- sin(seq(0, 2 * pi, 0.05)) * sin_scale
 
-    min_x <- min(kde$x) - 0.7
-    max_x <- max(kde$x) + 0.7
+    min_x <- min(kde$x) - 0.7 * sin_scale
+    max_x <- max(kde$x) + 0.7 * sin_scale
 
     # vid_len in seconds.
     fps <- length(offsets) / vid_len
@@ -170,7 +171,11 @@ build_moving <- function(vid_len = 6, video_name = 'moving_dist.mp4') {
             ani.options(interval = 1 / fps)
             for (i in 1:length(offsets)) {
                 offset <- offsets[i]
-                p <- plot_ssamp_dist(kde_df, offset)
+                p <- (
+                      plot_ssamp_dist(kde_df, offset)
+                      + labs(title = 'Sampling distribution estimate has uknown x-axis position')
+                      + theme(aspect.ratio=0.6)
+                )
                 p <- p + xlim(min_x, max_x)
                 plot(p)
             }
