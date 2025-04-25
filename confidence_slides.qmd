@@ -27,18 +27,51 @@ They have given me a random sample of 50 birth weights.
 ## The lonely sample
 
 ```{r}
-source('confidence_plots.R')
+# A random sample of birthweights that someone has taken for us.
+bw_sample <- read.csv('data/nc_birth_weights_sample.csv')
+bw_sample_vals <- bw_sample[['birth_weight']]
+sample_mean <- mean(bw_sample_vals)
+n <- nrow(bw_sample)
 ```
 
 ```{r}
-#| tags: [remove_input]
 bw_sample_vals
 ```
 
 ## A lonely distribution
 
 ```{r}
-#| tags: [remove_input]
+# Use theme_bw by default.
+theme_set(theme_bw())
+
+# Default bins for samples.
+breaks <- seq(0.2, 5.5, by=0.2)
+
+plot_bw <- function(df) {
+    if (nrow(df) > 1000) {  # Population
+        fill_col <- 'light grey'
+        mean_col <- 'blue'
+    } else {  # Sample
+        fill_col <- 'dark grey'
+        mean_col <- 'red'
+    }
+    mean_val <- mean(df[['birth_weight']])
+    label <- glue('Mean: {round(mean_val, 2)}')
+    p <- (
+        ggplot(df, aes(birth_weight))
+        + geom_histogram(fill = fill_col, breaks = breaks)
+        + geom_vline(aes(xintercept=mean_val, colour=label),
+                     linewidth=1,
+                     linetype='dashed')
+        + labs(x = "Birth weight", colour="")  # Reset colour for later.
+        + scale_colour_manual(values=mean_col)
+        + theme(legend.position.inside=c(0.25, 0.8),
+                legend.text = element_text(size=15),
+                aspect.ratio=0.7)
+    )
+}
+
+samp_ylims = ylim(0, 15)
 plot_bw(bw_sample) + labs(title = 'Our sample') + samp_ylims
 ```
 
@@ -68,7 +101,11 @@ random.
 In 2010, I will get all the state's data.  This is the *population* from which the sample is drawn.   It will turn out that it looks like this:
 
 ```{r}
-#| tags: [remove_input]
+# Birth weights for every baby born in North Carolina.
+bw_pop <- read.csv('data/nc_birth_weights.csv')
+bw_pop_vals <- bw_pop[['birth_weight']]
+pop_mean <- mean(bw_pop_vals)
+
 pop_p <- plot_bw(bw_pop) + labs(
     title = 'All NC birth weights',
     subtitle = '(Population)')
@@ -80,10 +117,60 @@ pop_p
 Let's stay in 2010, and draw four more samples.
 
 ```{r}
-#| tags: [remove_input]
+# Make some random samples.
+set.seed(1939)
+
+n_samples <- 5
+samples <- list()
+for (i in 2:(n_samples + 1)) {
+    sample <- sample_n(bw_pop, n)
+    name <- sprintf('%d', i)
+    p <- (plot_bw(sample)
+          + labs(title = glue('Sample {name}'))
+          + samp_ylims)
+    samples[[name]] = list(sample=sample,
+                           plot=p,
+                           mean=mean(sample[['birth_weight']]))
+}
+
+# Prepare for use in plot_grid.
+samp_plots = list()
+for (name in names(samples)) {
+    v <- samples[[name]]
+    samp_plots[[name]] <- (v[['plot']]
+                           + theme_half_open(12)
+                           + theme(legend.position = 'none')
+                           + labs(title=NULL)
+                           + xlab(glue('Mean: {round(v[["mean"]], 2)}'))
+    )
+}
+samp_plots[[1]] <- samp_plots[[1]] + ylab('Counts')
+
+# Estimated SD of sampling distribution of mean.
+sem <- sd(bw_pop_vals) / sqrt(n)
+samp_lims <- pop_mean + sem * c(-4, 4)
+
+# Prepare growing histograms of sample means.
+samp_dists = list()
+means = data.frame(sample_mean=numeric())
+samp_breaks = seq(2.9, 3.6, 0.1)
+mean_col = 'green'
+for (name in names(samples)) {
+    means[nrow(means) + 1,] = samples[[name]][['mean']]
+    p <- (
+        ggplot(means, aes(sample_mean))
+        + geom_histogram(breaks = samp_breaks)
+        + xlab('Mean birth weight')
+        + ylim(0, 5)
+        + theme_half_open(12)
+        + labs(title=NULL)
+    )
+    samp_dists[[name]] <- p
+}
+
 # From: <https://wilkelab.org/cowplot/articles/shared_legends.html>
 p_samps <- plot_grid(
-    plotlist = plots,
+    plotlist = samp_plots,
     align = 'vh',
     labels = sapply(1:n_samples, function(i) glue('S{i + 1}')),
     nrow = 1
@@ -100,7 +187,7 @@ mean.
 #| tags: [remove_input]
 p_whole <- plot_grid(
     pop_p + labs(title=NULL) + theme(legend.position='none'),
-    plot_grid(plotlist = plots, align = 'vh', nrow = 1),
+    plot_grid(plotlist = samp_plots, align = 'vh', nrow = 1),
     plot_grid(plotlist = samp_dists, align = 'vh', nrow = 1),
     ncol = 1)
 p_whole
@@ -109,9 +196,23 @@ p_whole
 ## With 10,000 samples ...
 
 ```{r}
-#| tags: [remove_input]
+# Compile sampling distribution of mean.
+n_iters <- 10000
+samp_dist_vals <- numeric(n_iters)
+for (i in 1:n_iters) {
+    sample <- sample(bw_pop_vals, n)
+    samp_dist_vals[i] <- mean(sample)
+}
+samp_dist <- data.frame(sample_mean=samp_dist_vals)
+
+m_samp_dist <- mean(samp_dist_vals)
+```
+
+```{r}
+samp_bin_width <- 0.01
 sd_lo = 2.9
 sd_hi = 3.6
+
 full_samp_breaks <- seq(sd_lo, sd_hi, samp_bin_width)
 m_s_d <- mean(samp_dist_vals)
 x_label <- glue('Sample means: mean {round(m_s_d, 2)}')
@@ -132,16 +233,20 @@ p_s_dist
 ## Cartoon of sampling distribution
 
 ```{r}
-#| tags: [remove_input]
-p <- (ggplot(samp_dist, aes(sample_mean))
-      + geom_histogram(breaks = full_samp_breaks, alpha=0.5)
-      + geom_line(data = kde_df, aes(x = x, y = y),
-                  linewidth=2)
-      + xlim(c(sd_lo, sd_hi))
-      + labs(x = 'Sample means')
-      + labs(title='Sampling distribution of mean')
-      )
-p
+# Cartoon is in fact the Kernel Density Estimate.
+kde <- density(samp_dist_vals, bw=0.02)
+kde_df <- data.frame(x = kde$x, y = kde$y * n_iters * samp_bin_width)
+```
+
+```{r}
+(ggplot(samp_dist, aes(sample_mean))
+ + geom_histogram(breaks = full_samp_breaks, alpha=0.5)
+ + geom_line(data = kde_df, aes(x = x, y = y),
+             linewidth=2)
+ + xlim(c(sd_lo, sd_hi))
+ + labs(x = 'Sample means')
+ + labs(title='Sampling distribution of mean')
+)
 ```
 
 ## Estimating the sampling distribution
@@ -151,7 +256,6 @@ the distribution of the sample itself (using, for example, the *bootstrap*
 method).
 
 ```{r}
-#| tags: [remove_input]
 plot_bw(bw_sample) + labs(title = 'Our sample') + samp_ylims
 ```
 
@@ -176,6 +280,55 @@ place this distribution on the x-axis).
 
 ## Distribution estimate and x-axis
 
+```{r}
+plot_ssamp_dist <- function(df, offset=0) {
+    df <- data.table::copy(df)
+    df$x <- df$x + offset
+    return (
+        ggplot(df, aes(df))
+        + geom_area(aes(x = x, y = y), linewidth=2, alpha=0.5)
+        + labs(x = 'Sample mean', y = 'Count',
+               title = 'Sampling distribution')
+        + geom_vline(aes(xintercept = m_samp_dist + offset),
+                     linetype='dashed')
+    )
+}
+```
+
+```{r}
+build_moving <- function(vid_len = 6,
+                         sin_scale = 0.3,
+                         video_name = 'moving_dist.mp4') {
+    offsets <- sin(seq(0, 2 * pi, 0.05)) * sin_scale
+
+    min_x <- min(kde$x) - 0.7 * sin_scale
+    max_x <- max(kde$x) + 0.7 * sin_scale
+
+    # vid_len is in seconds.
+    fps <- length(offsets) / vid_len
+
+    animation::saveVideo(
+        {
+            animation::ani.options(interval = 1 / fps)
+            for (i in 1:length(offsets)) {
+                offset <- offsets[i]
+                p <- (
+                      plot_ssamp_dist(kde_df, offset)
+                      + labs(title = 'Sampling distribution estimate has unknown x-axis position')
+                      + theme(aspect.ratio=0.6)
+                )
+                p <- p + xlim(min_x, max_x)
+                plot(p)
+            }
+        },
+        video.name = video_name
+    )
+}
+
+# Write animation by uncommenting line below.
+# build_moving()
+```
+
 {{< video moving_dist.mp4 height=600 width=900 >}}
 
 ## What can we do with this?
@@ -184,7 +337,18 @@ With the size and shape, we can estimate where the 2.5% and 97.5% tails are on
 the distribution, relative to the mean.
 
 ```{r}
-#| tags: [remove_input]
+kde_cdf <- cumsum(kde$y / sum(kde$y))
+le_025 <- kde_cdf <= 0.025
+ge_975 <- kde_cdf >= 0.975
+lower_tail <- subset(kde_df, le_025)
+upper_tail <- subset(kde_df, ge_975)
+lo_025_th <- max(lower_tail$x)
+hi_975_th <- min(upper_tail$x)
+
+lo_025_th <- max(lower_tail$x)
+hi_975_th <- min(upper_tail$x)
+upper_diff <- m_samp_dist - lo_025_th
+lower_diff <- m_samp_dist - hi_975_th
 
 plot_mdist_tails <- function(df, offset=0, tails='both') {
     p <- plot_ssamp_dist(df, offset)
@@ -200,7 +364,6 @@ plot_mdist_tails <- function(df, offset=0, tails='both') {
     }
     p
 }
-
 
 plot_with_arrows <- function(df, offset=0, arrows='both') {
     p <- plot_mdist_tails(df, offset, tails=arrows)
@@ -235,6 +398,7 @@ plot_with_arrows <- function(df, offset=0, arrows='both') {
     p
 }
 
+# Do the two-tailed plot.
 (plot_with_arrows(kde_df)
   + rm_x_ticks
   + geom_vline(aes(xintercept = lo_025_th),

@@ -11,5 +11,4 @@ Imports:
   glue,
   ggplot2,
   cowplot,
-  animation,
   data.table
