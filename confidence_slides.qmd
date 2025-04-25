@@ -72,6 +72,7 @@ plot_bw <- function(df) {
 }
 
 samp_ylims = ylim(0, 15)
+
 plot_bw(bw_sample) + labs(title = 'Our sample') + samp_ylims
 ```
 
@@ -106,9 +107,9 @@ bw_pop <- read.csv('data/nc_birth_weights.csv')
 bw_pop_vals <- bw_pop[['birth_weight']]
 pop_mean <- mean(bw_pop_vals)
 
-pop_p <- plot_bw(bw_pop) + labs(
+pop_p <- (plot_bw(bw_pop) + labs(
     title = 'All NC birth weights',
-    subtitle = '(Population)')
+    subtitle = '(Population)'))
 pop_p
 ```
 
@@ -146,28 +147,6 @@ for (name in names(samples)) {
 }
 samp_plots[[1]] <- samp_plots[[1]] + ylab('Counts')
 
-# Estimated SD of sampling distribution of mean.
-sem <- sd(bw_pop_vals) / sqrt(n)
-samp_lims <- pop_mean + sem * c(-4, 4)
-
-# Prepare growing histograms of sample means.
-samp_dists = list()
-means = data.frame(sample_mean=numeric())
-samp_breaks = seq(2.9, 3.6, 0.1)
-mean_col = 'green'
-for (name in names(samples)) {
-    means[nrow(means) + 1,] = samples[[name]][['mean']]
-    p <- (
-        ggplot(means, aes(sample_mean))
-        + geom_histogram(breaks = samp_breaks)
-        + xlab('Mean birth weight')
-        + ylim(0, 5)
-        + theme_half_open(12)
-        + labs(title=NULL)
-    )
-    samp_dists[[name]] <- p
-}
-
 # From: <https://wilkelab.org/cowplot/articles/shared_legends.html>
 p_samps <- plot_grid(
     plotlist = samp_plots,
@@ -184,13 +163,29 @@ Notice that, each time I draw a new sample, I get a slightly different sample
 mean.
 
 ```{r}
-#| tags: [remove_input]
-p_whole <- plot_grid(
+# Prepare growing histograms of sample means.
+samp_dists = list()
+means = data.frame(sample_mean=numeric())
+samp_breaks = seq(2.9, 3.6, 0.1)
+
+for (name in names(samples)) {
+    means[nrow(means) + 1,] = samples[[name]][['mean']]
+    p <- (
+        ggplot(means, aes(sample_mean))
+        + geom_histogram(breaks = samp_breaks)
+        + xlab('Mean birth weight')
+        + ylim(0, 5)
+        + theme_half_open(12)
+        + labs(title=NULL)
+    )
+    samp_dists[[name]] <- p
+}
+
+(plot_grid(
     pop_p + labs(title=NULL) + theme(legend.position='none'),
     plot_grid(plotlist = samp_plots, align = 'vh', nrow = 1),
     plot_grid(plotlist = samp_dists, align = 'vh', nrow = 1),
-    ncol = 1)
-p_whole
+    ncol = 1))
 ```
 
 ## With 10,000 samples ...
@@ -199,12 +194,13 @@ p_whole
 # Compile sampling distribution of mean.
 n_iters <- 10000
 samp_dist_vals <- numeric(n_iters)
+
 for (i in 1:n_iters) {
     sample <- sample(bw_pop_vals, n)
     samp_dist_vals[i] <- mean(sample)
 }
-samp_dist <- data.frame(sample_mean=samp_dist_vals)
 
+samp_dist <- data.frame(sample_mean=samp_dist_vals)
 m_samp_dist <- mean(samp_dist_vals)
 ```
 
@@ -216,8 +212,7 @@ sd_hi = 3.6
 full_samp_breaks <- seq(sd_lo, sd_hi, samp_bin_width)
 m_s_d <- mean(samp_dist_vals)
 x_label <- glue('Sample means: mean {round(m_s_d, 2)}')
-p_s_dist <- (
-    ggplot(samp_dist, aes(sample_mean))
+(ggplot(samp_dist, aes(sample_mean))
     + geom_histogram(breaks = full_samp_breaks)
     + geom_vline(aes(xintercept=m_s_d),
                  linewidth=1,
@@ -227,7 +222,6 @@ p_s_dist <- (
     + theme(legend.position='none')
     + labs(title='Sampling distribution of mean')
 )
-p_s_dist
 ```
 
 ## Cartoon of sampling distribution
@@ -265,7 +259,6 @@ the size and shape of the sampling distribution.
 ## Sampling distribution estimate
 
 ```{r}
-#| tags: [remove_input]
 rm_x_ticks <- theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
@@ -342,9 +335,6 @@ le_025 <- kde_cdf <= 0.025
 ge_975 <- kde_cdf >= 0.975
 lower_tail <- subset(kde_df, le_025)
 upper_tail <- subset(kde_df, ge_975)
-lo_025_th <- max(lower_tail$x)
-hi_975_th <- min(upper_tail$x)
-
 lo_025_th <- max(lower_tail$x)
 hi_975_th <- min(upper_tail$x)
 upper_diff <- m_samp_dist - lo_025_th
@@ -445,6 +435,7 @@ Superimpose the sampling distribution estimate.
 tail_xlims <- xlim(c(2.7, 3.9))
 sm_label = glue('Sample mean = {round(sample_mean, 2)}')
 offset = sample_mean + upper_diff - pop_mean
+
 (plot_with_arrows(kde_df, offset, arrows='left')
  + labs(x = '')
  + geom_vline(aes(xintercept=sample_mean),
@@ -462,7 +453,6 @@ offset = sample_mean + upper_diff - pop_mean
 ```
 
 ```{r}
-#| echo: false
 r_sm <- round(sample_mean, 2)
 r_ud <- round(upper_diff, 2)
 r_ld <- round(lower_diff, 2)
@@ -513,3 +503,5 @@ The me of 2009, before I saw the population data, can say:
 Using this calculation, 95% of random samples from this distribution will give
 us upper and lower bounds (confidence intervals) that include the population
 mean.
+
+(Consider what would happen if our sample mean was in the upper or lower red tails of the sampling distribution).
