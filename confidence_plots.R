@@ -173,7 +173,7 @@ build_moving <- function(vid_len = 6,
                 offset <- offsets[i]
                 p <- (
                       plot_ssamp_dist(kde_df, offset)
-                      + labs(title = 'Sampling distribution estimate has uknown x-axis position')
+                      + labs(title = 'Sampling distribution estimate has unknown x-axis position')
                       + theme(aspect.ratio=0.6)
                 )
                 p <- p + xlim(min_x, max_x)

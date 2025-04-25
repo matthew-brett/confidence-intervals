@@ -229,7 +229,26 @@ plot_with_arrows <- function(df, offset=0, arrows='both') {
     p
 }
 
-plot_with_arrows(kde_df) + rm_x_ticks
+(plot_with_arrows(kde_df)
+  + rm_x_ticks
+  + geom_vline(aes(xintercept = lo_025_th),
+               linetype = 'dashed',
+                 color = '#EEAD0E'
+               )
+    + geom_vline(aes(xintercept = hi_975_th),
+               linetype = 'dashed',
+               color = '#A2CD5A'
+               )
+   + annotate("text",
+            x = lo_025_th - 0.08,
+            y = 150,
+            label = '2.5% threshold')
+   + annotate("text",
+            x = hi_975_th + 0.09,
+            y = 150,
+            label = '97.5% threshold')
+  + labs(title = 'Estimated sampling distribution')
+)
 ```
 
 ## Confidence intervals
@@ -249,6 +268,7 @@ Superimpose the sampling distribution estimate.
 ## Sample mean at 2.5 percentile
 
 ```{r}
+tail_xlims <- xlim(c(2.7, 3.9))
 sm_label = glue('Sample mean = {round(sample_mean, 2)}')
 offset = sample_mean + upper_diff - pop_mean
 (plot_with_arrows(kde_df, offset, arrows='left')
@@ -259,6 +279,7 @@ offset = sample_mean + upper_diff - pop_mean
             x = sample_mean - 0.11,
             y = 400,
             label = sm_label)
+  + tail_xlims
  )
 ```
 
@@ -291,6 +312,7 @@ offset = sample_mean + lower_diff - pop_mean
             x = sample_mean + 0.11,
             y = 400,
             label = sm_label)
+  + tail_xlims
  )
 ```
 
