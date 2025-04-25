@@ -181,10 +181,10 @@ plot_mdist_tails <- function(df, offset=0, tails='both') {
     ut <- data.table::copy(upper_tail)
     ut$x <- ut$x + offset
     if (tails %in% c('both', 'left')) {
-        p <- p + geom_area(data = lt, aes(x=x, y=y), fill="red", alpha=0.5)
+        p <- p + geom_area(data = lt, aes(x=x, y=y), fill="red", alpha=0.7)
     }
     if (tails %in% c('both', 'right')) {
-        p <- p + geom_area(data = ut, aes(x=x, y=y), fill="red", alpha=0.5)
+        p <- p + geom_area(data = ut, aes(x=x, y=y), fill="red", alpha=0.7)
     }
     p
 }
@@ -197,23 +197,23 @@ plot_with_arrows <- function(df, offset=0, arrows='both') {
     e <- 0.01
     if (arrows %in% c('both', 'left')) {
         p <- (p
-        + geom_segment(aes(x = lo_025_th + e + offset,
-                           y = 30,
-                           xend = m_samp_dist - e + offset,
-                           yend = 30),
-                       arrow = arrow(length = unit(0.5, "cm")))
+        + geom_segment(x = lo_025_th + e + offset,
+                       y = 30,
+                       xend = m_samp_dist - e + offset,
+                       yend = 30,
+                       arrow = arrow())
         + annotate("text", x = mid_upper + offset,
                    y = 50,
                    label = glue('{round(upper_diff, 2)}'))
         )
     }
-    if (arrows == 'both' | arrows == 'right') {
+    if (arrows %in% c('both', 'right')) {
         p <- (p
-        + geom_segment(aes(x = hi_975_th - e + offset,
-                           y = 30,
-                           xend = m_samp_dist + e + offset,
-                           yend = 30),
-                       arrow = arrow(length = unit(0.5, "cm")))
+        + geom_segment(x = hi_975_th - e + offset,
+                       y = 30,
+                       xend = m_samp_dist + e + offset,
+                       yend = 30,
+                       arrow = arrow())
         + annotate("text",
                    x = mid_lower + offset,
                    y = 50,
