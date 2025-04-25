@@ -247,6 +247,10 @@ plot_with_arrows <- function(df, offset=0, arrows='both') {
             x = hi_975_th + 0.09,
             y = 150,
             label = '97.5% threshold')
+  + annotate("text",
+             x = pop_mean + 0.07,
+             y = 450,
+             label = 'Distribution\nmean')
   + labs(title = 'Estimated sampling distribution')
 )
 ```
@@ -276,9 +280,13 @@ offset = sample_mean + upper_diff - pop_mean
  + geom_vline(aes(xintercept=sample_mean),
               linewidth=1, linetype='dashed')
  + annotate("text",
-            x = sample_mean - 0.11,
+            x = sample_mean - 0.12,
             y = 400,
             label = sm_label)
+  + annotate("text",
+             x = pop_mean + offset + 0.08,
+             y = 450,
+             label = 'Distribution\nmean')
   + tail_xlims
  )
 ```
@@ -312,6 +320,10 @@ offset = sample_mean + lower_diff - pop_mean
             x = sample_mean + 0.11,
             y = 400,
             label = sm_label)
+  + annotate("text",
+             x = pop_mean + offset - 0.1,
+             y = 450,
+             label = 'Distribution\nmean')
   + tail_xlims
  )
 ```
