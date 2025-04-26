@@ -84,7 +84,8 @@ But I want to know the mean of the *population* (all births in the state).
 
 I don't have the population values.
 
-We now come to the crucial problem in statistics: given my *sample*, what can I say about the *population*?
+We now come to the crucial problem in statistics: given my *sample*, what can
+I say about the *population*?
 
 Here: given my sample, what can I say about the population mean?
 
@@ -99,7 +100,8 @@ random.
 
 ## The curtain pulls back
 
-In 2010, I will get all the state's data.  This is the *population* from which the sample is drawn.   It will turn out that it looks like this:
+In 2010, I will get all the state's data.  This is the *population* from which
+the sample is drawn.   It will turn out that it looks like this:
 
 ```{r}
 # Birth weights for every baby born in North Carolina.
@@ -504,4 +506,5 @@ Using this calculation, 95% of random samples from this distribution will give
 us upper and lower bounds (confidence intervals) that include the population
 mean.
 
-(Consider what would happen if our sample mean was in the upper or lower red tails of the sampling distribution).
+(Consider what would happen if our sample mean was in the upper or lower red
+tails of the sampling distribution).
